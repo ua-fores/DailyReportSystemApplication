@@ -31,21 +31,45 @@ public class EmployeeService {
     @Transactional
     public ErrorKinds save(Employee employee) {
 
-            // パスワードチェック
-            ErrorKinds result = employeePasswordCheck(employee);
-            if (ErrorKinds.CHECK_OK != result) {
-                return result;
-            }
+        // パスワードチェック
+        ErrorKinds result = employeePasswordCheck(employee);
+        if (ErrorKinds.CHECK_OK != result) {
+            return result;
+        }
 
-            // 従業員番号重複チェック
-            if (findByCode(employee.getCode()) != null) {
-                return ErrorKinds.DUPLICATE_ERROR;
-            }
+        // 従業員番号重複チェック
+        if (findByCode(employee.getCode()) != null) {
+            return ErrorKinds.DUPLICATE_ERROR;
+        }
 
         employee.setDeleteFlg(false);
 
         LocalDateTime now = LocalDateTime.now();
         employee.setCreatedAt(now);
+        employee.setUpdatedAt(now);
+
+        employeeRepository.save(employee);
+        return ErrorKinds.SUCCESS;
+    }
+
+    // 従業員更新
+    @Transactional
+    public ErrorKinds save(String code, Employee employee) {
+
+        // パスワードチェック
+        if ("".equals(employee.getPassword())) {
+            employee.setPassword(findByCode(code).getPassword());
+        }else {
+            ErrorKinds result = employeePasswordCheck(employee);
+            if (ErrorKinds.CHECK_OK != result) {
+                return result;
+            }
+        }
+
+        employee.setDeleteFlg(false);
+
+        LocalDateTime now = LocalDateTime.now();
+        employee.setCreatedAt(findByCode(code).getCreatedAt());
         employee.setUpdatedAt(now);
 
         employeeRepository.save(employee);

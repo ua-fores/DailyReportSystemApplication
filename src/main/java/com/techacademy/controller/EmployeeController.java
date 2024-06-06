@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.techacademy.constants.ErrorKinds;
 import com.techacademy.constants.ErrorMessage;
@@ -98,6 +99,48 @@ public class EmployeeController {
         return "redirect:/employees";
     }
 
+
+
+    // 従業員更新画面
+    @GetMapping(value = "/{code}/update")
+    public String edit(@PathVariable(required = false) String code, Employee employee, Model model) {
+        if (code == null) {
+            model.addAttribute("employee", employee);
+        }else {
+            model.addAttribute("employee", employeeService.findByCode(code));
+        }
+        return "employees/update";
+    }
+
+    // 従業員更新処理
+    @PostMapping(value = "/{code}/update")
+    public String update(@PathVariable String code, @Validated Employee employee, BindingResult res, Model model) {
+
+        // 入力チェック
+        if (res.hasErrors()) {
+            return edit(null, employee, model);
+        }
+
+        // 論理削除を行った従業員番号を指定すると例外となるためtry~catchで対応
+        // (findByIdでは削除フラグがTRUEのデータが取得出来ないため)
+        try {
+            ErrorKinds result = employeeService.save(code, employee);
+
+            if (ErrorMessage.contains(result)) {
+                model.addAttribute(ErrorMessage.getErrorName(result), ErrorMessage.getErrorValue(result));
+                return edit(null, employee, model);
+            }
+
+        } catch (DataIntegrityViolationException e) {
+            model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DUPLICATE_EXCEPTION_ERROR),
+                    ErrorMessage.getErrorValue(ErrorKinds.DUPLICATE_EXCEPTION_ERROR));
+            return edit(null, employee, model);
+        }
+
+        return "redirect:/employees";
+    }
+
+
     // 従業員削除処理
     @PostMapping(value = "/{code}/delete")
     public String delete(@PathVariable String code, @AuthenticationPrincipal UserDetail userDetail, Model model) {
@@ -108,53 +151,6 @@ public class EmployeeController {
             model.addAttribute(ErrorMessage.getErrorName(result), ErrorMessage.getErrorValue(result));
             model.addAttribute("employee", employeeService.findByCode(code));
             return detail(code, model);
-        }
-
-        return "redirect:/employees";
-    }
-
-    @GetMapping(value = "/{code}/update")
-    public String edit(@PathVariable String code, @AuthenticationPrincipal UserDetail userDetail, Model model) {
-        model.addAttribute("user", employeeService.findByCode(code));
-        return "employees/update";
-    }
-
-    @PostMapping(value = "/{code}/update")
-    public String update(@Validated Employee employee, BindingResult res, Model model) {
-
-        // パスワード空白チェック
-        /*
-         * エンティティ側の入力チェックでも実装は行えるが、更新の方でパスワードが空白でもチェックエラーを出さずに
-         * 更新出来る仕様となっているため上記を考慮した場合に別でエラーメッセージを出す方法が簡単だと判断
-         */
-        if ("".equals(employee.getPassword())) {
-            // パスワードが空白だった場合
-            model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.BLANK_ERROR),
-                    ErrorMessage.getErrorValue(ErrorKinds.BLANK_ERROR));
-
-            return create(employee);
-
-        }
-
-        // 入力チェック
-        if (res.hasErrors()) {
-            return create(employee);
-        }
-
-        // 論理削除を行った従業員番号を指定すると例外となるためtry~catchで対応
-        // (findByIdでは削除フラグがTRUEのデータが取得出来ないため)
-        try {
-            ErrorKinds result = employeeService.save(employee);
-
-            if (ErrorMessage.contains(result)) {
-                model.addAttribute(ErrorMessage.getErrorName(result), ErrorMessage.getErrorValue(result));
-                return create(employee);
-            }
-
-        } catch (DataIntegrityViolationException e) {
-            model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DUPLICATE_EXCEPTION_ERROR),
-                    ErrorMessage.getErrorValue(ErrorKinds.DUPLICATE_EXCEPTION_ERROR));
-            return create(employee);
         }
 
         return "redirect:/employees";

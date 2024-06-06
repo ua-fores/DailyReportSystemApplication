@@ -18,12 +18,12 @@
 
                 <div class="col-xl-12">
                     <div class="card">
-                        <div class="cardheader bg-light border p-2">
+                        <div class="card-header">
                             パスワードは変更する場合のみ入力してください
                         </div>
 
-                        <div class="cardbody">
-                            <form th:action="@{/employees/{code}/update(code=${code})}" th:object="${user}" th:method="post">
+                        <div class="card-body">
+                            <form th:action="@{/employees/{code}/update(code=${code})}" th:object="${employee}" th:method="post">
                                 <div class="wizard wizard-success mb-4">
                                     <div class="mb-3">
                                         <label class="form-label" for="code">社員番号</label>
@@ -31,7 +31,6 @@
                                         <div class="mb-7">
                                             <p th:text="*{code}" id="code"></p>
                                         </div>
-                                    </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="name">氏名</label>
                                         <p class="mb-1"></p>
