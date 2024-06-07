@@ -13,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -28,20 +30,20 @@ public class Report {
 
     // 日付
     @Column(nullable = false)
+    @NotNull
     private LocalDate report_date;
 
     // タイトル
     @Column(length =100, nullable = false)
     @Length(max = 100)
+    @NotEmpty
     private String title;
 
     //内容
     @Column(nullable = false, columnDefinition="LONGTEXT")
+    @Length(max = 600)
+    @NotEmpty
     private String content;
-
-//    //社員番号  -> いらない　JoinColumnで指定しているので別途不要
-//    @Column(length =10, nullable = false)
-//    private String employee_code;
 
     //削除フラグ
     @Column(columnDefinition = "TINYINT", nullable = false)
