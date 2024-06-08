@@ -3,6 +3,7 @@ package com.techacademy.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.validator.constraints.Length;
 
 import jakarta.persistence.Column;
@@ -20,7 +21,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "reports")
-//@SQLRestriction("delete_flg = false")
+@SQLRestriction("delete_flg = false")
 public class Report {
 
     // ID
@@ -47,15 +48,15 @@ public class Report {
 
     //削除フラグ
     @Column(columnDefinition = "TINYINT", nullable = false)
-    private boolean delete_flg;
+    private boolean deleteFlg;
 
     // 登録日時
     @Column(nullable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     // 更新日時
     @Column(nullable = false)
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "employee_code", referencedColumnName = "code", nullable = false)

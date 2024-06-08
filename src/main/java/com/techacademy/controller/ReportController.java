@@ -9,6 +9,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,7 +38,15 @@ public class ReportController {
         model.addAttribute("listSize", reportService.findAll().size());
         model.addAttribute("reportList", reportService.findAll());
 
-        return "/reports/list";
+        return "reports/list";
+    }
+
+    // 日報詳細画面
+    @GetMapping(value = "/{ID}/")
+    public String detail(@PathVariable("ID") String id, Model model) {
+
+        model.addAttribute("report", reportService.findById(id));
+        return "reports/detail";
     }
 
     // 日報新規登録画面
@@ -50,7 +59,8 @@ public class ReportController {
 
     // 日報新規登録処理
     @PostMapping(value = "/add")
-    public String add(@Validated Report report, BindingResult res, @AuthenticationPrincipal UserDetail userDetail,Model model) {
+    public String add(@Validated Report report, BindingResult res, @AuthenticationPrincipal UserDetail userDetail,
+            Model model) {
         if (res.hasErrors()) {
             return create(report, userDetail, model);
         }
@@ -71,6 +81,15 @@ public class ReportController {
 
         return "redirect:/reports";
 
+    }
+
+    // 日報削除処理
+    @PostMapping(value = "/{ID}/delete")
+    public String delete(@PathVariable("ID") String id, Model model) {
+
+        ErrorKinds result = reportService.delete(id);
+
+        return "redirect:/reports";
     }
 
 }
