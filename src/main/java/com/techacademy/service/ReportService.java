@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.techacademy.constants.ErrorKinds;
+import com.techacademy.entity.Employee;
 import com.techacademy.entity.Report;
 import com.techacademy.repository.ReportRepository;
 
@@ -39,19 +40,11 @@ public class ReportService {
     // 日報保存
     @Transactional
     public ErrorKinds save(Report report, UserDetail userDetail) {
-
-        // 日付重複チェック
-        List<Report> reportList = findAll();
-        for (Report regReport : reportList) {
-
-            if (regReport.getEmployee().getCode().equals(userDetail.getEmployee().getCode())
-                    && regReport.getReport_date().equals(report.getReport_date())) {
-                return ErrorKinds.DATECHECK_ERROR;
-            }
-        }
+        // セッションから従業員情報を取得
+        Employee employee = userDetail.getEmployee();
 
         report.setDeleteFlg(false);
-        report.setEmployee(userDetail.getEmployee());
+        report.setEmployee(employee);
 
         LocalDateTime now = LocalDateTime.now();
         report.setCreatedAt(now);
@@ -61,6 +54,24 @@ public class ReportService {
         return ErrorKinds.SUCCESS;
     }
 
+    // 日報更新
+    @Transactional
+    public ErrorKinds save(String id, Report report) {
+
+        // 登録済みレポート情報と更新情報をマージ
+        Report tmp = report;
+        report = findById(id);
+        report.setReportDate(tmp.getReportDate());
+        report.setTitle(tmp.getTitle());
+        report.setContent(tmp.getContent());
+
+
+        LocalDateTime now = LocalDateTime.now();
+        report.setUpdatedAt(now);
+
+        reportRepository.save(report);
+        return ErrorKinds.SUCCESS;
+    }
 
     // 日報削除機能
     @Transactional
