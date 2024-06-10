@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.techacademy.constants.ErrorKinds;
 import com.techacademy.entity.Employee;
+import com.techacademy.entity.Report;
 import com.techacademy.repository.EmployeeRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +89,11 @@ public class EmployeeService {
         LocalDateTime now = LocalDateTime.now();
         employee.setUpdatedAt(now);
         employee.setDeleteFlg(true);
+        // 対象の従業員の日報も削除
+        List<Report> reportList = employee.getReportList();
+        for (Report report: reportList) {
+                report.setDeleteFlg(true);
+        }
 
         return ErrorKinds.SUCCESS;
     }
