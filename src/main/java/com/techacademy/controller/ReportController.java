@@ -71,6 +71,7 @@ public class ReportController {
 
                 model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DATECHECK_ERROR),
                         ErrorMessage.getErrorValue(ErrorKinds.DATECHECK_ERROR));
+                return create(report, userDetail, model);
             }
         }
 
@@ -113,6 +114,8 @@ public class ReportController {
 
                 model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DATECHECK_ERROR),
                         ErrorMessage.getErrorValue(ErrorKinds.DATECHECK_ERROR));
+                return edit(null, report, model);
+
             }
         }
 
