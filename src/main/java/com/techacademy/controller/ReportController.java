@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.techacademy.constants.ErrorKinds;
 import com.techacademy.constants.ErrorMessage;
+import com.techacademy.entity.Employee;
+import com.techacademy.entity.Employee.Role;
 import com.techacademy.entity.Report;
 import com.techacademy.service.ReportService;
 import com.techacademy.service.UserDetail;
@@ -34,10 +36,15 @@ public class ReportController {
 
     // 日報一覧画面
     @GetMapping
-    public String list(Model model) {
+    public String list(@AuthenticationPrincipal UserDetail userDetail, Model model) {
 
-        model.addAttribute("listSize", reportService.findAll().size());
-        model.addAttribute("reportList", reportService.findAll());
+        if (userDetail.getEmployee().getRole().equals(Role.ADMIN)) {
+            model.addAttribute("listSize", reportService.findAll().size());
+            model.addAttribute("reportList", reportService.findAll());
+        } else {
+            model.addAttribute("listSize", reportService.findByCode(userDetail.getEmployee().getCode()).size());
+            model.addAttribute("reportList", reportService.findByCode(userDetail.getEmployee().getCode()));
+        }
 
         return "reports/list";
     }
@@ -63,24 +70,17 @@ public class ReportController {
     public String add(@Validated Report report, BindingResult res, @AuthenticationPrincipal UserDetail userDetail,
             Model model) {
 
-        // 日付重複チェック
-        List<Report> reportList = reportService.findAll();
-        for (Report regReport : reportList) {
-            if (regReport.getReportDate().equals(report.getReportDate())
-                    && regReport.getEmployee().getCode().equals(userDetail.getEmployee().getCode())) {
-
-                model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DATECHECK_ERROR),
-                        ErrorMessage.getErrorValue(ErrorKinds.DATECHECK_ERROR));
-                return create(report, userDetail, model);
-            }
-        }
-
         // 入力チェック
         if (res.hasErrors()) {
             return create(report, userDetail, model);
         }
 
+        // 登録処理
         ErrorKinds result = reportService.save(report, userDetail);
+        if (ErrorMessage.contains(result)) {
+            model.addAttribute(ErrorMessage.getErrorName(result), ErrorMessage.getErrorValue(result));
+            return create(report, userDetail, model);
+        }
 
         return "redirect:/reports";
 
@@ -105,26 +105,17 @@ public class ReportController {
         report.setId(Integer.valueOf(reportService.findById(id).getId()));
         report.setEmployee(reportService.findById(id).getEmployee());
 
-        // 日付重複チェック
-        List<Report> reportList = reportService.findAll();
-        for (Report regReport : reportList) {
-
-            if (!(regReport.getId().equals(report.getId())) && regReport.getReportDate().equals(report.getReportDate())
-                    && regReport.getEmployee().getCode().equals(report.getEmployee().getCode())) {
-
-                model.addAttribute(ErrorMessage.getErrorName(ErrorKinds.DATECHECK_ERROR),
-                        ErrorMessage.getErrorValue(ErrorKinds.DATECHECK_ERROR));
-                return edit(null, report, model);
-
-            }
-        }
-
         // 入力チェック
         if (res.hasErrors()) {
             return edit(null, report, model);
         }
 
+        //登録処理
         ErrorKinds result = reportService.save(id, report);
+        if (ErrorMessage.contains(result)) {
+            model.addAttribute(ErrorMessage.getErrorName(result), ErrorMessage.getErrorValue(result));
+            return edit(null, report, model);
+        }
 
         return "redirect:/reports";
     }
@@ -133,7 +124,7 @@ public class ReportController {
     @PostMapping(value = "/{ID}/delete")
     public String delete(@PathVariable("ID") String id, Model model) {
 
-        ErrorKinds result = reportService.delete(id);
+        reportService.delete(id);
 
         return "redirect:/reports";
     }

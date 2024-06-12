@@ -1,6 +1,7 @@
 package com.techacademy.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.techacademy.constants.ErrorKinds;
+import com.techacademy.constants.ErrorMessage;
 import com.techacademy.entity.Employee;
 import com.techacademy.entity.Report;
 import com.techacademy.repository.ReportRepository;
@@ -28,6 +30,18 @@ public class ReportService {
         return reportRepository.findAll();
     }
 
+    // 従業員の投稿を検索
+    public List<Report> findByCode(String code) {
+        List<Report> allReport = reportRepository.findAll();
+        List<Report> reportList = new ArrayList<>();
+        for (Report report : allReport) {
+            if (report.getEmployee().getCode().equals(code)) {
+                reportList.add(report);
+            }
+        }
+        return reportList;
+    }
+
     // 1件を検索
     public Report findById(String id) {
         // findByIdで検索
@@ -43,6 +57,16 @@ public class ReportService {
         // セッションから従業員情報を取得
         Employee employee = userDetail.getEmployee();
 
+        // 日付重複チェック
+        List<Report> reportList = findAll();
+        for (Report regReport : reportList) {
+            if (regReport.getReportDate().equals(report.getReportDate())
+                    && regReport.getEmployee().getCode().equals(userDetail.getEmployee().getCode())) {
+
+                return ErrorKinds.DATECHECK_ERROR;
+            }
+        }
+
         report.setDeleteFlg(false);
         report.setEmployee(employee);
 
@@ -57,6 +81,16 @@ public class ReportService {
     // 日報更新
     @Transactional
     public ErrorKinds save(String id, Report report) {
+        //　日付重複チェック
+        List<Report> reportList = findAll();
+        for (Report regReport : reportList) {
+
+            if (!(regReport.getId().equals(report.getId())) && regReport.getReportDate().equals(report.getReportDate())
+                    && regReport.getEmployee().getCode().equals(report.getEmployee().getCode())) {
+
+                return ErrorKinds.DATECHECK_ERROR;
+            }
+        }
 
         // 登録済みレポート情報と更新情報をマージ
         Report tmp = report;
@@ -64,7 +98,6 @@ public class ReportService {
         report.setReportDate(tmp.getReportDate());
         report.setTitle(tmp.getTitle());
         report.setContent(tmp.getContent());
-
 
         LocalDateTime now = LocalDateTime.now();
         report.setUpdatedAt(now);
